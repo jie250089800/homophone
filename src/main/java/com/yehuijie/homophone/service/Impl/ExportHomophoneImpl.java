@@ -1,6 +1,7 @@
 package com.yehuijie.homophone.service.Impl;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.sun.tools.corba.se.idl.constExpr.Or;
 import com.yehuijie.homophone.entity.*;
 import com.yehuijie.homophone.mapper.customer.CustomerHomophoneMapper;
 import com.yehuijie.homophone.service.*;
@@ -46,6 +47,7 @@ public class ExportHomophoneImpl implements ExportService {
     @Autowired
     HomophoneService homophoneService;
 
+    private final String EMPTY_VALUE = "*";
 
     @Override
     public void export() {
@@ -83,13 +85,10 @@ public class ExportHomophoneImpl implements ExportService {
                             List<Homophone> shengDiaoList = shengDiaoMap.get(shengDiaoSort.getShengDiao());
                             if (BlankUtil.isNotEmpty(shengDiaoList)) {
                                 text.append("[").append(shengDiaoSort.getShengDiao()).append("]");
-                                String name = "";
                                 for (Homophone homophone : shengDiaoList) {
                                     num++;
-                                    name = name + homophone.getName();
                                     text.append(homophone.getName());
                                 }
-                                name = name + " ";
                             }
                         }
                         text.append("\n");
@@ -113,9 +112,12 @@ public class ExportHomophoneImpl implements ExportService {
         List<OriginHomophone> originHomophones = originHomophoneService.selectList(wrapper);
         List<Homophone> homophones = new LinkedList<>();
         for (OriginHomophone originHomophone : originHomophones) {
-            if (isMatch(originHomophone.getPh().trim(), "；")) {
-
-                String[] split = originHomophone.getPh().split("；");
+            if (isMatch(originHomophone.getPh().trim(), "；") || isMatch(originHomophone.getPh().trim(), ";")) {
+                String[] split;
+                split = originHomophone.getPh().split("；");
+                if (split.length <= 1) {
+                    split = originHomophone.getPh().split(";");
+                }
                 for (String s : split) {
                     originHomophone.setPh(s);
                     Homophone homophone = getHomophone(yunMuLengthSorts, shengMuLengthSorts, shengDiaoSorts, originHomophone);
@@ -132,7 +134,7 @@ public class ExportHomophoneImpl implements ExportService {
         if (BlankUtil.isNotEmpty(ids)) {
             homophoneService.deleteBatchIds(ids);
         }
-        homophoneService.insertOrUpdateAllColumnBatch(homophones);
+        homophoneService.insertBatch(homophones);
         homophones.forEach(System.out::println);
     }
 
@@ -163,12 +165,14 @@ public class ExportHomophoneImpl implements ExportService {
         for (YunMuSort yunMu : yunMuLengthSorts) {
             if (isMatch(originHomophone.getPh().trim(), yunMu.getYunMu().trim())) {
                 homophone.setYunMu(yunMu.getYunMu().trim());
+                refreshOriginValue(originHomophone, yunMu.getYunMu().trim());
                 break;
             }
         }
         for (ShengMuSort shengMuSort : shengMuLengthSorts) {
             if (isMatch(originHomophone.getPh().trim(), shengMuSort.getShengMu().trim())) {
                 homophone.setShengMu(shengMuSort.getShengMu().trim());
+                refreshOriginValue(originHomophone, shengMuSort.getShengMu().trim());
                 break;
             }
         }
@@ -187,16 +191,26 @@ public class ExportHomophoneImpl implements ExportService {
 
     }
 
+    private void refreshOriginValue(OriginHomophone originHomophone, String regex) {
+
+        if (BlankUtil.isEmpty(regex) || EMPTY_VALUE.equals(regex)) {
+            return;
+        }
+        String s = originHomophone.getPh().replaceAll(regex, "");
+        originHomophone.setPh(s);
+
+    }
+
     private Homophone setNotNullValue(Homophone homophone) {
 
         if (BlankUtil.isEmpty(homophone.getYunMu())) {
-            homophone.setYunMu("*");
+            homophone.setYunMu(EMPTY_VALUE);
         }
         if (BlankUtil.isEmpty(homophone.getShengMu())) {
-            homophone.setShengMu("*");
+            homophone.setShengMu(EMPTY_VALUE);
         }
         if (BlankUtil.isEmpty(homophone.getShengDiao())) {
-            homophone.setShengDiao("*");
+            homophone.setShengDiao(EMPTY_VALUE);
         }
         return homophone;
     }
