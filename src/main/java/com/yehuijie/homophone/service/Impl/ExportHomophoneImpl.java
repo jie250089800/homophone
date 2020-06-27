@@ -2,15 +2,28 @@ package com.yehuijie.homophone.service.Impl;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.sun.tools.corba.se.idl.constExpr.Or;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import com.yehuijie.homophone.entity.*;
 import com.yehuijie.homophone.mapper.customer.CustomerHomophoneMapper;
 import com.yehuijie.homophone.service.*;
 import com.yehuijie.homophone.util.BlankUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.LineSpacingRule;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,10 +73,8 @@ public class ExportHomophoneImpl implements ExportService {
 
         Map<String, List<Homophone>> yunMuMap = homophones.stream().collect(Collectors.groupingBy(Homophone::getYunMu, LinkedHashMap::new, Collectors.toList()));
 
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("信息表");
-        // 表头
-        ;
+        XWPFDocument document = new XWPFDocument();
+
         StringBuilder text = new StringBuilder();
 
         for (YunMuSort yunMuSort : yunMuSorts) {
@@ -98,6 +109,32 @@ public class ExportHomophoneImpl implements ExportService {
         }
         System.out.println(num);
         System.out.println(text);
+        XWPFParagraph paragraph = document.createParagraph();
+        paragraph.setSpacingBetween(12, LineSpacingRule.EXACT);
+        XWPFRun run = paragraph.createRun();
+        String s = text.toString().replaceAll("\n", "\r\n");
+        run.setText(s);
+        String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String fileName = "同音字表"+currentTime+".doc";
+        String path =System.getProperty("user.dir") +File.separator + fileName;
+
+        File file = new File(path);
+        FileOutputStream os = null;
+        try {
+            os = new FileOutputStream(file);
+            document.write(os);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                assert os != null;
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
 
     }
 
