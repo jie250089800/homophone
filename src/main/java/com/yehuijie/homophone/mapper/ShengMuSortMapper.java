@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.mapper.BaseMapper;
  * </p>
  *
  * @author yhj
- * @since 2020-06-21
+ * @since 2020-06-27
  */
 public interface ShengMuSortMapper extends BaseMapper<ShengMuSort> {
 

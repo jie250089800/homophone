@@ -25,10 +25,11 @@ public class MybatisplusGenerator {
         boolean serviceNameStartWithI = false;//user -> UserService, 设置成true: user -> IUserService
         generateByTables(serviceNameStartWithI,
                 packageName
-                , "origin_homophone"
-                , "yun_mu_sort"
-                , "sheng_mu_sort"
+//                , "origin_homophone"
+//                , "yun_mu_sort"
+//                , "sheng_mu_sort"
                 , "homophone"
+//                , "sheng_diao_sort"
 
 
         );

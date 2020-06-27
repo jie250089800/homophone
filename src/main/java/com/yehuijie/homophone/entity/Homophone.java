@@ -13,7 +13,7 @@ import java.io.Serializable;
  * </p>
  *
  * @author yhj
- * @since 2020-06-21
+ * @since 2020-06-27
  */
 public class Homophone extends Model<Homophone> {
 
@@ -25,6 +25,7 @@ public class Homophone extends Model<Homophone> {
     private String shengMu;
     private String yunMu;
     private String shengDiao;
+    private String originValue;
 
 
     public Long getId() {
@@ -67,6 +68,14 @@ public class Homophone extends Model<Homophone> {
         this.shengDiao = shengDiao;
     }
 
+    public String getOriginValue() {
+        return originValue;
+    }
+
+    public void setOriginValue(String originValue) {
+        this.originValue = originValue;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -80,6 +89,7 @@ public class Homophone extends Model<Homophone> {
         ", shengMu=" + shengMu +
         ", yunMu=" + yunMu +
         ", shengDiao=" + shengDiao +
+        ", originValue=" + originValue +
         "}";
     }
 }

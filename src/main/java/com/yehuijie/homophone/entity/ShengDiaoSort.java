@@ -13,7 +13,7 @@ import java.io.Serializable;
  * </p>
  *
  * @author yhj
- * @since 2020-06-21
+ * @since 2020-06-27
  */
 public class ShengDiaoSort extends Model<ShengDiaoSort> {
 
@@ -23,6 +23,7 @@ public class ShengDiaoSort extends Model<ShengDiaoSort> {
     private Integer id;
     private String shengDiao;
     private Integer sort;
+    private String originValue;
 
 
     public Integer getId() {
@@ -49,6 +50,14 @@ public class ShengDiaoSort extends Model<ShengDiaoSort> {
         this.sort = sort;
     }
 
+    public String getOriginValue() {
+        return originValue;
+    }
+
+    public void setOriginValue(String originValue) {
+        this.originValue = originValue;
+    }
+
     @Override
     protected Serializable pkVal() {
         return this.id;
@@ -60,6 +69,7 @@ public class ShengDiaoSort extends Model<ShengDiaoSort> {
         ", id=" + id +
         ", shengDiao=" + shengDiao +
         ", sort=" + sort +
+        ", originValue=" + originValue +
         "}";
     }
 }

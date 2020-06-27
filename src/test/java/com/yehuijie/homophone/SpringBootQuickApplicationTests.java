@@ -42,17 +42,18 @@ public class SpringBootQuickApplicationTests {
 
     @Test
     public void export() {
-
         exportService.export();
     }
 
 
     @Test
     public void updateHomophoneTable() {
-
-
         exportService.updateHomophone();
-
     }
 
+
+    @Test
+    public void verify() {
+        exportService.verify();
+    }
 }

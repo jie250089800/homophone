@@ -14,5 +14,7 @@ public interface ExportService {
 
      void updateHomophone();
 
+     void verify();
+
 
 }

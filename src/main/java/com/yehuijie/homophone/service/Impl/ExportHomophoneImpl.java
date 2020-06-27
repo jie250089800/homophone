@@ -54,7 +54,7 @@ public class ExportHomophoneImpl implements ExportService {
         List<YunMuSort> yunMuSorts = getYunMuSorts("sort");
         List<ShengMuSort> shengMuSorts = getShengMuSorts("sort");
         List<ShengDiaoSort> shengDiaoSorts = getShengDiaoSorts("sort");
-
+        Long num = 0L;
 
         Map<String, List<Homophone>> yunMuMap = homophones.stream().collect(Collectors.groupingBy(Homophone::getYunMu, LinkedHashMap::new, Collectors.toList()));
 
@@ -68,7 +68,6 @@ public class ExportHomophoneImpl implements ExportService {
             List<Homophone> yunMuList = yunMuMap.get(yunMuSort.getYunMu());
             if (BlankUtil.isNotEmpty(yunMuList)) {
                 System.out.println();
-//                System.out.println("[" + yunMuSort.getYunMu() + "]");
                 text.append("\n").append("[").append(yunMuSort.getYunMu()).append("]").append("\n");
                 Map<String, List<Homophone>> shengMuMap = yunMuList.stream().filter(homophone ->
                         homophone.getShengMu() != null
@@ -76,21 +75,21 @@ public class ExportHomophoneImpl implements ExportService {
                 for (ShengMuSort shengMuSort : shengMuSorts) {
                     List<Homophone> shengMuList = shengMuMap.get(shengMuSort.getShengMu());
                     if (BlankUtil.isNotEmpty(shengMuList)) {
-//                        System.out.print(shengMuSort.getShengMu() + " ");
                         text.append(shengMuSort.getShengMu()).append(" ");
-                        Map<String, List<Homophone>> shengDiaoMap = shengMuList.stream().collect(Collectors.groupingBy(Homophone::getShengDiao));
+                        Map<String, List<Homophone>> shengDiaoMap = shengMuList.stream().filter(homophone ->
+                                homophone.getShengDiao() != null
+                        ).collect(Collectors.groupingBy(Homophone::getShengDiao));
                         for (ShengDiaoSort shengDiaoSort : shengDiaoSorts) {
                             List<Homophone> shengDiaoList = shengDiaoMap.get(shengDiaoSort.getShengDiao());
                             if (BlankUtil.isNotEmpty(shengDiaoList)) {
-//                                System.out.print("[" + shengDiaoSort.getShengDiao() + "]");
                                 text.append("[").append(shengDiaoSort.getShengDiao()).append("]");
                                 String name = "";
                                 for (Homophone homophone : shengDiaoList) {
+                                    num++;
                                     name = name + homophone.getName();
                                     text.append(homophone.getName());
                                 }
                                 name = name + " ";
-//                                System.out.print(name);
                             }
                         }
                         text.append("\n");
@@ -98,74 +97,9 @@ public class ExportHomophoneImpl implements ExportService {
                 }
             }
         }
+        System.out.println(num);
         System.out.println(text);
 
-//
-//        for (Homophone text : homophones) {
-//            String num = "";
-//            String alph = "";
-//            char[] arr = text.getPin().toCharArray();
-//            for (int i = 0; i < arr.length; i++) {
-//                try {
-//                    int a = Integer.parseInt(String.valueOf(arr[i]));
-//                    num = num.concat(String.valueOf(arr[i]));
-//                } catch (Exception e) {
-//                    alph = alph.concat(String.valueOf(arr[i]));
-//                }
-//            }
-//            text.setYun(num);
-//
-//        }
-//        List<text> texts1 = new LinkedList<>();
-//        Map<String, List<Text>> collect = texts.stream().collect(Collectors.groupingBy(Text::getPin));
-//
-//
-//        List<List<cell>> sheets = new LinkedList<>();
-//        for (Map.Entry<String, List<Text>> entry : collect.entrySet()) {
-//
-//            String num = "";
-//            String alph = "";
-//            char[] arr = entry.getKey().toCharArray();
-//            for (int i = 0; i < arr.length; i++) {
-//                try {
-//                    int a = Integer.parseInt(String.valueOf(arr[i]));
-//                    num = num.concat(String.valueOf(arr[i]));
-//                } catch (Exception e) {
-//                    alph = alph.concat(String.valueOf(arr[i]));
-//                }
-//            }
-//            String s1;
-//            String s2;
-//            String s3 = "";
-//            s2 = "[" + num + "]";
-//            s1 = alph + ":";
-//
-//            for (Text text : entry.getValue()) {
-//                s3 = s3 + text.getName();
-//            }
-//            text text = new text();
-//            text.setName(s1);
-//            text.setValue(s2 + s3 + "  ");
-//            texts1.add(text);
-//        }
-//        Map<String, List<text>> collect1 = texts1.stream().collect(Collectors.groupingBy(text::getName));
-//        for (Map.Entry<String, List<text>> entry : collect1.entrySet()) {
-//            List<cell> bodys = new LinkedList<>();
-//            cell c1 = new cell();
-//            String s = "";
-//            for (text text : entry.getValue()) {
-//                s = text.getValue() + s;
-//            }
-//            String s1 = entry.getKey() + s;
-//            c1.setValue(s1);
-//            bodys.add(c1);
-//            sheets.add(bodys);
-//
-//
-//        }
-//
-//        HSSFWorkbook wb = new HSSFWorkbook();
-//        ExcelExportUtils.exportExcel(httpServletResponse, "export", sheets, wb);
     }
 
     @Override
@@ -179,45 +113,92 @@ public class ExportHomophoneImpl implements ExportService {
         List<OriginHomophone> originHomophones = originHomophoneService.selectList(wrapper);
         List<Homophone> homophones = new LinkedList<>();
         for (OriginHomophone originHomophone : originHomophones) {
-            Homophone homophone = new Homophone();
-            homophone.setName(originHomophone.getPhrase());
-            for (YunMuSort yunMu : yunMuLengthSorts) {
-                if (isMatch(originHomophone.getPh(), yunMu.getYunMu().trim()) == null) {
-                } else {
-                    homophone.setYunMu(yunMu.getYunMu().trim());
-                    break;
+            if (isMatch(originHomophone.getPh().trim(), "；")) {
+
+                String[] split = originHomophone.getPh().split("；");
+                for (String s : split) {
+                    originHomophone.setPh(s);
+                    Homophone homophone = getHomophone(yunMuLengthSorts, shengMuLengthSorts, shengDiaoSorts, originHomophone);
+                    homophones.add(setNotNullValue(homophone));
                 }
-            }
-            for (ShengMuSort shengMuSort : shengMuLengthSorts) {
-                if (isMatch(originHomophone.getPh(), shengMuSort.getShengMu().trim()) == null) {
-                } else {
-                    homophone.setShengMu(shengMuSort.getShengMu().trim());
-                    break;
-                }
-            }
-            for (ShengDiaoSort shengDiaoSort : shengDiaoSorts) {
-                if (isMatch(originHomophone.getPh(), shengDiaoSort.getShengDiao().trim()) == null) {
-                } else {
-                    homophone.setShengDiao(shengDiaoSort.getShengDiao().trim());
-                    break;
-                }
+            } else {
+                Homophone homophone = getHomophone(yunMuLengthSorts, shengMuLengthSorts, shengDiaoSorts, originHomophone);
+                homophones.add(setNotNullValue(homophone));
             }
 
-            homophones.add(homophone);
         }
 
+        List<Long> ids = homophoneService.selectList(null).stream().map(Homophone::getId).collect(Collectors.toList());
+        if (BlankUtil.isNotEmpty(ids)) {
+            homophoneService.deleteBatchIds(ids);
+        }
         homophoneService.insertOrUpdateAllColumnBatch(homophones);
         homophones.forEach(System.out::println);
     }
 
-    private String isMatch(String value, String regex) {
+    @Override
+    public void verify() {
+        List<Homophone> homophones = homophoneService.selectList(null);
+        List<ShengDiaoSort> shengDiaoSorts = getShengDiaoSorts("id");
+        Map<String, List<ShengDiaoSort>> shengDiaoMap = shengDiaoSorts.stream().collect(Collectors.groupingBy(ShengDiaoSort::getShengDiao));
+        List<Homophone> incorrectList = homophones.stream().filter(homophone -> {
 
-        if (!value.matches("(.*)" + regex + "(.*)")) {
-            return null;
+            List<ShengDiaoSort> diaoSorts = shengDiaoMap.get(homophone.getShengDiao());
+            if (diaoSorts.size() <= 0) {
+                return true;
+            } else if (!(homophone.getShengMu() + homophone.getYunMu() + diaoSorts.get(0).getOriginValue()).equals(homophone.getOriginValue())) {
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
+
+        incorrectList.forEach(System.out::println);
+
+    }
+
+    private Homophone getHomophone(List<YunMuSort> yunMuLengthSorts, List<ShengMuSort> shengMuLengthSorts, List<ShengDiaoSort> shengDiaoSorts, OriginHomophone originHomophone) {
+        Homophone homophone = new Homophone();
+        homophone.setName(originHomophone.getPhrase());
+        homophone.setOriginValue(originHomophone.getPh());
+        for (YunMuSort yunMu : yunMuLengthSorts) {
+            if (isMatch(originHomophone.getPh().trim(), yunMu.getYunMu().trim())) {
+                homophone.setYunMu(yunMu.getYunMu().trim());
+                break;
+            }
         }
+        for (ShengMuSort shengMuSort : shengMuLengthSorts) {
+            if (isMatch(originHomophone.getPh().trim(), shengMuSort.getShengMu().trim())) {
+                homophone.setShengMu(shengMuSort.getShengMu().trim());
+                break;
+            }
+        }
+        for (ShengDiaoSort shengDiaoSort : shengDiaoSorts) {
+            if (isMatch(originHomophone.getPh().trim(), shengDiaoSort.getOriginValue().trim())) {
+                homophone.setShengDiao(shengDiaoSort.getShengDiao().trim());
+                break;
+            }
+        }
+        return homophone;
+    }
 
-        return regex;
+    private boolean isMatch(String value, String regex) {
 
+        return value.matches("(.*)" + regex + "(.*)");
+
+    }
+
+    private Homophone setNotNullValue(Homophone homophone) {
+
+        if (BlankUtil.isEmpty(homophone.getYunMu())) {
+            homophone.setYunMu("*");
+        }
+        if (BlankUtil.isEmpty(homophone.getShengMu())) {
+            homophone.setShengMu("*");
+        }
+        if (BlankUtil.isEmpty(homophone.getShengDiao())) {
+            homophone.setShengDiao("*");
+        }
+        return homophone;
     }
 
     private List<YunMuSort> getYunMuSorts(String column) {
@@ -238,7 +219,4 @@ public class ExportHomophoneImpl implements ExportService {
         return shengDiaoSortService.selectList(e1);
     }
 
-    public static void main(String[] args) {
-
-    }
 }
